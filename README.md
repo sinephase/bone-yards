@@ -33,3 +33,72 @@ Built on **Yamagi Quake II** (64-bit clean, modern OpenGL 3.2 renderer, GPL v2).
 **Language**: C/C++ | **Build**: CMake | **Platforms**: Linux, Windows, macOS, FreeBSD
 
 ## Project Structure
+
+```
+bone-yards/
+├── src/
+│   └── bone_yards/           # Game-specific code
+│       ├── by_local.h
+│       ├── by_main.c
+│       ├── by_power.c
+│       ├── by_player.c
+│       ├── by_enemy.c
+│       ├── by_editor.c
+│       ├── by_hazard.c
+│       └── by_spawn.c
+├── assets/
+│   └── scripts/
+│       ├── entities.json
+│       └── power_zones.json
+├── docs/
+│   ���── (to be added)
+└── CMakeLists.txt
+```
+
+## Building
+
+### Prerequisites
+
+- CMake 3.10+
+- C99-compliant compiler (gcc, clang)
+- OpenGL 3.2+ support
+- JPEG, PNG, zlib development libraries
+
+### Linux/macOS
+
+```bash
+git clone https://github.com/sinephase/bone-yards.git
+cd bone-yards
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+```
+
+### Windows
+
+```bash
+cmake -G "Visual Studio 16 2019" ..
+cmake --build . --config Release
+```
+
+## Running
+
+```bash
+./bone-yards
+```
+
+In-game editor accessible via console: `by_editor 1`
+
+## Documentation
+
+- **[DESIGN.md](./DESIGN.md)** — Full game design document, lore, mechanics
+
+## License
+
+This project is built on **Yamagi Quake II**, which is licensed under **GPLv2**. All custom code is also licensed under **GPLv2** per the Quake II source release.
+
+## Credits
+
+- **Yamagi Quake II** — Modern Quake II port and maintenance
+- **id Software** — Original Quake II engine and game design
+- **Bone Yards Concept** — Custom design for this project
