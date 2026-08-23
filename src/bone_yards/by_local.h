@@ -12,6 +12,7 @@
 #define BY_LOCAL_H
 
 #include "../game/game.h"
+#include "by_input.h"
 
 #define BY_VERSION "1.0.0"
 #define BY_PROTOCOL_VERSION 34
@@ -19,6 +20,8 @@
 #define BONE_YARDS_MAX_POWER_ZONES 32
 #define BONE_YARDS_MAX_ENEMIES 256
 #define BONE_YARDS_MAX_HAZARDS 64
+
+#define FRAMETIME 0.016f  /* 60 FPS */
 
 typedef enum {
 	ENTITY_PLAYER = 0,
@@ -168,5 +171,16 @@ void BY_UpdateHazards(void);
 void BY_ApplyRadiationDamage(edict_t *target, float intensity);
 
 void BY_SpawnEntities(const char *mapname, const char *entities, const char *spawnpoint);
+
+void BY_InitPlayerInput(edict_t *player);
+void BY_UpdatePlayerInput(edict_t *player, usercmd_t *cmd);
+void BY_ProcessMovement(edict_t *player, player_input_t *input);
+void BY_ProcessCombat(edict_t *player, player_input_t *input);
+
+void BY_ApplyGravity(edict_t *player);
+qboolean BY_IsOnGround(edict_t *player);
+void BY_HandleJump(edict_t *player);
+void BY_LimitVelocity(edict_t *player, float max_speed);
+void BY_UpdatePlayerPhysics(edict_t *player);
 
 #endif /* BY_LOCAL_H */
