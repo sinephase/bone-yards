@@ -10,6 +10,7 @@
 
 #include "by_engine.h"
 #include <stdio.h>
+#include <stddef.h>
 
 /* Simple vertex for debug geometry */
 typedef struct {
@@ -157,10 +158,10 @@ BY_Render_DrawBox(vec3_t pos, float size, float r, float g, float b)
 
 	vertex_t vertices[] = {
 		/* Front face */
-		{pos.x - h, pos.y - h, pos.z + h, r, g, b},
-		{pos.x + h, pos.y - h, pos.z + h, r, g, b},
-		{pos.x + h, pos.y + h, pos.z + h, r, g, b},
-		{pos.x - h, pos.y + h, pos.z + h, r, g, b},
+		{pos[0] - h, pos[1] - h, pos[2] + h, r, g, b},
+		{pos[0] + h, pos[1] - h, pos[2] + h, r, g, b},
+		{pos[0] + h, pos[1] + h, pos[2] + h, r, g, b},
+		{pos[0] - h, pos[1] + h, pos[2] + h, r, g, b},
 	};
 
 	glBindVertexArray(render_state.vao);
@@ -175,8 +176,8 @@ void
 BY_Render_DrawLine(vec3_t start, vec3_t end, float r, float g, float b)
 {
 	vertex_t vertices[] = {
-		{start.x, start.y, start.z, r, g, b},
-		{end.x, end.y, end.z, r, g, b},
+		{start[0], start[1], start[2], r, g, b},
+		{end[0], end[1], end[2], r, g, b},
 	};
 
 	glBindVertexArray(render_state.vao);

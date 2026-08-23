@@ -81,16 +81,16 @@ Game_Update(float dt)
 	float cos_yaw = cosf(yaw_rad);
 	float sin_yaw = sinf(yaw_rad);
 
-	game_state.player_pos.x += (move_x * cos_yaw - move_z * sin_yaw);
-	game_state.player_pos.z += (move_x * sin_yaw + move_z * cos_yaw);
+	game_state.player_pos[0] += (move_x * cos_yaw - move_z * sin_yaw);
+	game_state.player_pos[2] += (move_x * sin_yaw + move_z * cos_yaw);
 
 	/* Space to jump */
 	if (BY_Engine_IsKeyPressed(GLFW_KEY_SPACE))
-		game_state.player_pos.y -= 50.0f * dt;
+		game_state.player_pos[1] -= 50.0f * dt;
 
 	/* Ctrl to crouch */
 	if (BY_Engine_IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
-		game_state.player_pos.y += 50.0f * dt;
+		game_state.player_pos[1] += 50.0f * dt;
 
 	/* Update cooldowns */
 	if (game_state.fire_cooldown > 0.0f)
@@ -112,9 +112,9 @@ Game_Update(float dt)
 		/* Check for nearby entities */
 		for (int i = 0; i < num_entities; i++)
 		{
-			float dx = test_entities[i].pos.x - game_state.player_pos.x;
-			float dy = test_entities[i].pos.y - game_state.player_pos.y;
-			float dz = test_entities[i].pos.z - game_state.player_pos.z;
+			float dx = test_entities[i].pos[0] - game_state.player_pos[0];
+			float dy = test_entities[i].pos[1] - game_state.player_pos[1];
+			float dz = test_entities[i].pos[2] - game_state.player_pos[2];
 			float dist = sqrtf(dx*dx + dy*dy + dz*dz);
 
 			if (dist < 100.0f)  /* Melee range */
@@ -144,9 +144,9 @@ Game_Render(void)
 	float yaw_rad = game_state.player_yaw * 3.14159f / 180.0f;
 
 	/* Calculate forward direction */
-	forward.x = sinf(yaw_rad);
-	forward.y = 0.0f;
-	forward.z = -cosf(yaw_rad);
+	forward[0] = sinf(yaw_rad);
+	forward[1] = 0.0f;
+	forward[2] = -cosf(yaw_rad);
 
 	/* Draw floor grid */
 	for (int x = -500; x <= 500; x += 100)
@@ -174,15 +174,15 @@ Game_Render(void)
 
 	/* Draw crosshair (center of screen) */
 	vec3_t crosshair_center = {
-		game_state.player_pos.x + forward.x * 100.0f,
-		game_state.player_pos.y,
-		game_state.player_pos.z + forward.z * 100.0f
+		game_state.player_pos[0] + forward[0] * 100.0f,
+		game_state.player_pos[1],
+		game_state.player_pos[2] + forward[2] * 100.0f
 	};
 
-	vec3_t cross_h1 = {crosshair_center.x - 10.0f, crosshair_center.y, crosshair_center.z};
-	vec3_t cross_h2 = {crosshair_center.x + 10.0f, crosshair_center.y, crosshair_center.z};
-	vec3_t cross_v1 = {crosshair_center.x, crosshair_center.y - 10.0f, crosshair_center.z};
-	vec3_t cross_v2 = {crosshair_center.x, crosshair_center.y + 10.0f, crosshair_center.z};
+	vec3_t cross_h1 = {crosshair_center[0] - 10.0f, crosshair_center[1], crosshair_center[2]};
+	vec3_t cross_h2 = {crosshair_center[0] + 10.0f, crosshair_center[1], crosshair_center[2]};
+	vec3_t cross_v1 = {crosshair_center[0], crosshair_center[1] - 10.0f, crosshair_center[2]};
+	vec3_t cross_v2 = {crosshair_center[0], crosshair_center[1] + 10.0f, crosshair_center[2]};
 
 	BY_Engine_DrawLine(cross_h1, cross_h2, 1.0f, 1.0f, 0.0f);
 	BY_Engine_DrawLine(cross_v1, cross_v2, 1.0f, 1.0f, 0.0f);

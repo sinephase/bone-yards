@@ -153,6 +153,16 @@ BY_Engine_IsRunning(void)
 	return engine_running && !glfwWindowShouldClose(engine.window);
 }
 
+void
+BY_Engine_Run(void)
+{
+	while (BY_Engine_IsRunning())
+	{
+		BY_Engine_BeginFrame();
+		BY_Engine_EndFrame();
+	}
+}
+
 /* ====================================================================== */
 /* FRAME MANAGEMENT */
 /* ====================================================================== */
@@ -265,22 +275,24 @@ BY_Math_LookAt(vec3_t eye, vec3_t center, vec3_t up)
 	return BY_Math_Identity();
 }
 
-vec3_t
-BY_Math_VectorAdd(vec3_t a, vec3_t b)
+void
+BY_Math_VectorAdd(vec3_t out, vec3_t a, vec3_t b)
 {
-	vec3_t result = {a.x + b.x, a.y + b.y, a.z + b.z};
-	return result;
+	out[0] = a[0] + b[0];
+	out[1] = a[1] + b[1];
+	out[2] = a[2] + b[2];
 }
 
-vec3_t
-BY_Math_VectorScale(vec3_t v, float s)
+void
+BY_Math_VectorScale(vec3_t out, vec3_t v, float s)
 {
-	vec3_t result = {v.x * s, v.y * s, v.z * s};
-	return result;
+	out[0] = v[0] * s;
+	out[1] = v[1] * s;
+	out[2] = v[2] * s;
 }
 
 float
 BY_Math_VectorLength(vec3_t v)
 {
-	return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+	return sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 }

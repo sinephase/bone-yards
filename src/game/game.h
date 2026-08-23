@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <math.h>
 #include <time.h>
 #include <stdarg.h>
@@ -26,13 +27,9 @@ typedef int qboolean;
 #define true 1
 #define false 0
 
-typedef struct {
-	float x, y, z;
-} vec3_t;
+typedef float vec3_t[3];
 
-typedef struct {
-	int x, y, z;
-} ivec3_t;
+typedef int ivec3_t[3];
 
 typedef struct {
 	float m[16];
@@ -74,6 +71,12 @@ typedef struct gclient_s {
 	int ping;
 } gclient_t;
 
+typedef struct {
+	vec3_t origin;
+	vec3_t angles;
+	vec3_t old_origin;
+} entity_state_t;
+
 typedef struct edict_s {
 	int s_number;
 	int inuse;
@@ -84,9 +87,7 @@ typedef struct edict_s {
 	int classname_index;
 	const char *classname;
 	float freetime;
-	vec3_t s_origin;
-	vec3_t s_angles;
-	vec3_t s_old_origin;
+	entity_state_t s;
 	vec3_t velocity;
 	vec3_t avelocity;
 	vec3_t mins;
@@ -105,6 +106,7 @@ typedef struct edict_s {
 	float ltime;
 	float lastactivetime;
 	int index;
+	struct edict_s *owner;
 	gclient_t *client;
 	void *priv;
 } edict_t;
@@ -167,12 +169,28 @@ typedef struct {
 
 #define GAME_API_VERSION 3
 
+#if defined(_WIN32)
+#define Q2_DLL_EXPORTED __declspec(dllexport)
+#else
+#define Q2_DLL_EXPORTED __attribute__((visibility("default")))
+#endif
+
+#define CVAR_SERVERINFO 1
+
+typedef struct cvar_s {
+	char *name;
+	char *string;
+	float value;
+	int flags;
+} cvar_t;
+
 typedef struct {
 	void (*dprintf)(const char *fmt, ...);
 	void (*error)(const char *fmt, ...);
 	void (*FreeTags)(int tag);
 	void *(*TagMalloc)(int size, int tag);
 	void (*TagFree)(void *ptr, int tag);
+	cvar_t *(*cvar)(const char *name, const char *value, int flags);
 } game_import_t;
 
 typedef struct {
@@ -207,7 +225,9 @@ typedef struct {
 /* HELPER MACROS */
 /* ====================================================================== */
 
+#ifndef M_PI
 #define M_PI 3.14159265359f
+#endif
 
 /* Vector operations */
 #define VectorClear(a) ((a)[0]=(a)[1]=(a)[2]=0)

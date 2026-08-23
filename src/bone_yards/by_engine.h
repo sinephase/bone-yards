@@ -61,8 +61,8 @@ void BY_Engine_DrawText(vec3_t pos, const char *text, float scale);
 mat4_t BY_Math_Identity(void);
 mat4_t BY_Math_Perspective(float fov, float aspect, float near, float far);
 mat4_t BY_Math_LookAt(vec3_t eye, vec3_t center, vec3_t up);
-vec3_t BY_Math_VectorAdd(vec3_t a, vec3_t b);
-vec3_t BY_Math_VectorScale(vec3_t v, float s);
+void BY_Math_VectorAdd(vec3_t out, vec3_t a, vec3_t b);
+void BY_Math_VectorScale(vec3_t out, vec3_t v, float s);
 float BY_Math_VectorLength(vec3_t v);
 
 extern engine_context_t engine;

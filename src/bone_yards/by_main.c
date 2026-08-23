@@ -21,11 +21,11 @@ static cvar_t *deathmatch;
 static cvar_t *coop;
 static cvar_t *skill;
 static cvar_t *maxclients;
-static cvar_t *sv_gravity;
+cvar_t *sv_gravity;
 static cvar_t *by_difficulty;
 static cvar_t *by_editor_enabled;
 
-static void
+void
 BY_ShutdownGame(void)
 {
 	gi.dprintf("==== BY_ShutdownGame ====\n");
@@ -85,7 +85,7 @@ BY_InitGame(void)
 	gi.dprintf("Game initialized successfully.\n");
 }
 
-static void
+void
 BY_RunFrame(void)
 {
 	int i;
