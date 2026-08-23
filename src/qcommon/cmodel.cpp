@@ -5,6 +5,7 @@
 #include "qcommon.h"
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 namespace engine {
 
@@ -19,8 +20,10 @@ trace_t CM_BoxTrace(const glm::vec3& start, const glm::vec3& end,
     trace.contents = 0;
     trace.allsolid = false;
     trace.startsolid = false;
+    trace.ent = nullptr;
 
     if (brushes.empty()) {
+        trace.endpos = end;
         return trace;
     }
 
@@ -60,8 +63,30 @@ static void CM_ClipBoxToBrushFace(const glm::vec3& mins, const glm::vec3& maxs,
                                   const glm::vec3& start, const glm::vec3& end,
                                   trace_t* trace, const plane_t& plane) {
     // Calculate the distance of the box from the plane at start and end
-    float d1 = glm::dot(start, plane.normal) - plane.dist - 1.0f;
-    float d2 = glm::dot(end, plane.normal) - plane.dist - 1.0f;
+    // We need to account for the box extents along the plane normal
+    float d1 = glm::dot(start, plane.normal) - plane.dist;
+    float d2 = glm::dot(end, plane.normal) - plane.dist;
+
+    // Add box extent in the direction of the plane normal
+    float extent = 0.0f;
+    if (plane.normal.x > 0) {
+        extent += maxs.x * plane.normal.x;
+    } else {
+        extent += mins.x * plane.normal.x;
+    }
+    if (plane.normal.y > 0) {
+        extent += maxs.y * plane.normal.y;
+    } else {
+        extent += mins.y * plane.normal.y;
+    }
+    if (plane.normal.z > 0) {
+        extent += maxs.z * plane.normal.z;
+    } else {
+        extent += mins.z * plane.normal.z;
+    }
+
+    d1 -= extent;
+    d2 -= extent;
 
     if (d2 > 0.0f) {
         return;  // Box is on the non-solid side at end
@@ -82,11 +107,13 @@ static void CM_ClipBoxToBrushFace(const glm::vec3& mins, const glm::vec3& maxs,
 
     float f = d1 / (d1 - d2);
     if (f < 0.0f) f = 0.0f;
+    if (f > 1.0f) f = 1.0f;
     if (f > trace->fraction) return;  // Not closer than previous hit
 
     trace->fraction = f;
     trace->plane = plane;
     trace->startsolid = (d1 < 0.0f);
+    trace->surface.flags = 0;  // TODO: surface flags from brush
 }
 
 void CM_ClipBoxToBrush(const glm::vec3& mins, const glm::vec3& maxs,
@@ -105,11 +132,13 @@ trace_t CM_RayBox(const glm::vec3& origin, const glm::vec3& dir,
                   const glm::vec3& mins, const glm::vec3& maxs) {
     trace_t trace;
     trace.fraction = 1.0f;
+    trace.ent = nullptr;
 
-    float tmin = -1e9f, tmax = 1e9f;
-    int hit_axis = -1, hit_sign = 0;
+    float tmin = -std::numeric_limits<float>::max();
+    float tmax = std::numeric_limits<float>::max();
+    int hit_axis = -1;
 
-    // Test intersection against each box plane
+    // Test intersection against each box plane pair
     for (int i = 0; i < 3; i++) {
         float d = dir[i];
         
@@ -129,7 +158,6 @@ trace_t CM_RayBox(const glm::vec3& origin, const glm::vec3& dir,
             if (t1 > tmin) {
                 tmin = t1;
                 hit_axis = i;
-                hit_sign = (d < 0) ? 1 : -1;
             }
             if (t2 < tmax) tmax = t2;
 
@@ -151,8 +179,6 @@ trace_t CM_RayBox(const glm::vec3& origin, const glm::vec3& dir,
         return trace;
     }
 
-    trace.axis = hit_axis;
-    trace.sign = hit_sign;
     return trace;
 }
 
@@ -161,24 +187,37 @@ void CM_BuildBrushPlanes(brush_t& brush) {
     brush.planes.clear();
 
     // Define the 6 planes of an axis-aligned box
-    const glm::vec3 normals[6] = {
-        { 1, 0, 0}, {-1, 0, 0},  // +X, -X
-        { 0, 1, 0}, { 0,-1, 0},  // +Y, -Y
-        { 0, 0, 1}, { 0, 0,-1}   // +Z, -Z
-    };
+    plane_t p;
 
-    const float dists[6] = {
-        brush.maxs.x, -brush.mins.x,
-        brush.maxs.y, -brush.mins.y,
-        brush.maxs.z, -brush.mins.z
-    };
+    // +X plane
+    p.normal = {1, 0, 0};
+    p.dist = brush.maxs.x;
+    brush.planes.push_back(p);
 
-    for (int i = 0; i < 6; i++) {
-        plane_t p;
-        p.normal = normals[i];
-        p.dist = dists[i];
-        brush.planes.push_back(p);
-    }
+    // -X plane
+    p.normal = {-1, 0, 0};
+    p.dist = -brush.mins.x;
+    brush.planes.push_back(p);
+
+    // +Y plane
+    p.normal = {0, 1, 0};
+    p.dist = brush.maxs.y;
+    brush.planes.push_back(p);
+
+    // -Y plane
+    p.normal = {0, -1, 0};
+    p.dist = -brush.mins.y;
+    brush.planes.push_back(p);
+
+    // +Z plane
+    p.normal = {0, 0, 1};
+    p.dist = brush.maxs.z;
+    brush.planes.push_back(p);
+
+    // -Z plane
+    p.normal = {0, 0, -1};
+    p.dist = -brush.mins.z;
+    brush.planes.push_back(p);
 }
 
 // Create a new brush from bounds
@@ -187,8 +226,30 @@ brush_t CM_MakeBoxBrush(const glm::vec3& mins, const glm::vec3& maxs, int conten
     brush.mins = mins;
     brush.maxs = maxs;
     brush.contents = contents;
+    brush.surfaceFlags = 0;
     CM_BuildBrushPlanes(brush);
     return brush;
+}
+
+// Check if a sphere intersects a box
+bool CM_SphereBoxIntersect(const glm::vec3& sphere_center, float sphere_radius,
+                           const glm::vec3& box_mins, const glm::vec3& box_maxs) {
+    // Find the closest point on the box to the sphere center
+    glm::vec3 closest = glm::clamp(sphere_center, box_mins, box_maxs);
+    
+    // Calculate distance between sphere center and closest point
+    glm::vec3 diff = sphere_center - closest;
+    float dist_sq = glm::dot(diff, diff);
+    
+    return dist_sq <= (sphere_radius * sphere_radius);
+}
+
+// Check if two boxes intersect
+bool CM_BoxesIntersect(const glm::vec3& mins1, const glm::vec3& maxs1,
+                       const glm::vec3& mins2, const glm::vec3& maxs2) {
+    return !(maxs1.x < mins2.x || mins1.x > maxs2.x ||
+             maxs1.y < mins2.y || mins1.y > maxs2.y ||
+             maxs1.z < mins2.z || mins1.z > maxs2.z);
 }
 
 }  // namespace engine
