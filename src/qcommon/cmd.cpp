@@ -5,6 +5,7 @@
 #include "qcommon.h"
 #include <sstream>
 #include <algorithm>
+#include <iostream>
 
 namespace engine {
 
@@ -17,6 +18,7 @@ struct cmd_function_t {
 static std::vector<std::string> cmd_buffer;
 static std::unordered_map<std::string, cmd_function_t> cmd_functions;
 static std::vector<std::string> print_buffer;
+static print_sink_t g_print_sink = nullptr;
 
 void Cmd_Init() {
     cmd_buffer.clear();
@@ -37,6 +39,13 @@ void Cmd_AddCommand(const std::string& name, cmd_callback_t callback, const std:
     fn.callback = callback;
     fn.description = description;
     cmd_functions[name] = fn;
+}
+
+void Cmd_RemoveCommand(const std::string& name) {
+    auto it = cmd_functions.find(name);
+    if (it != cmd_functions.end()) {
+        cmd_functions.erase(it);
+    }
 }
 
 // Tokenize a command line into words, respecting quotes
@@ -78,7 +87,7 @@ void Cbuf_Execute() {
         cmd_buffer.erase(cmd_buffer.begin());
 
         // Skip empty lines and comments
-        if (line.empty() || line[0] == ';' || (line[0] == '/' && line[1] == '/')) {
+        if (line.empty() || line[0] == ';' || (line.length() > 1 && line[0] == '/' && line[1] == '/')) {
             continue;
         }
 
@@ -93,7 +102,7 @@ void Cbuf_Execute() {
         if (it != cmd_functions.end()) {
             it->second.callback(argv);
         } else {
-            Com_Printf("Unknown command: " + cmd);
+            Com_Printf("Unknown command: " + cmd + "\n");
         }
     }
 }
@@ -124,8 +133,6 @@ std::vector<cmd_function_t> Cmd_GetList() {
     return list;
 }
 
-print_sink_t g_print_sink = nullptr;
-
 void Com_SetPrintSink(print_sink_t sink) {
     g_print_sink = sink;
 }
@@ -138,7 +145,7 @@ void Com_Printf(const std::string& msg) {
     }
 
     // Also log to stderr for debugging
-    std::cerr << msg << "\n";
+    std::cerr << msg;
 }
 
 void Com_DPrintf(const std::string& msg) {
