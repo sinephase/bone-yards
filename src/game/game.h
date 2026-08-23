@@ -56,6 +56,24 @@ typedef struct {
 #define SOLID_BBOX 2
 #define SOLID_BSP 3
 
+/* Forward declarations */
+typedef struct edict_s edict_t;
+typedef struct gclient_s gclient_t;
+
+typedef struct {
+	int usernum;
+	unsigned int buttons;
+	unsigned int oldbuttons;
+	short forwardmove;
+	short rightmove;
+	short upmove;
+	short angles[3];
+} usercmd_t;
+
+typedef struct gclient_s {
+	int ping;
+} gclient_t;
+
 typedef struct edict_s {
 	int s_number;
 	int inuse;
@@ -87,28 +105,9 @@ typedef struct edict_s {
 	float ltime;
 	float lastactivetime;
 	int index;
-	struct gclient_s *client;
+	gclient_t *client;
 	void *priv;
 } edict_t;
-
-typedef struct {
-	int usernum;
-	unsigned int buttons;
-	unsigned int oldbuttons;
-	short forwardmove;
-	short rightmove;
-	short upmove;
-	short angles[3];
-} usercmd_t;
-
-typedef struct gclient_s {
-	usernum_t ps;
-	int ping;
-} gclient_t;
-
-typedef struct {
-	int ping;
-} usernum_t;
 
 /* ====================================================================== */
 /* GAME STATE */
@@ -219,8 +218,8 @@ typedef struct {
 #define VectorAdd(a,b,c) ((c)[0]=(a)[0]+(b)[0], (c)[1]=(a)[1]+(b)[1], (c)[2]=(a)[2]+(b)[2])
 #define VectorScale(v,s,o) ((o)[0]=(v)[0]*(s), (o)[1]=(v)[1]*(s), (o)[2]=(v)[2]*(s))
 #define VectorMA(v,s,b,o) ((o)[0]=(v)[0]+(b)[0]*(s), (o)[1]=(v)[1]+(b)[1]*(s), (o)[2]=(v)[2]+(b)[2]*(s))
-#define VectorNormalize(v) { float len = sqrt((v)[0]*(v)[0]+(v)[1]*(v)[1]+(v)[2]*(v)[2]); if(len) { (v)[0]/=len; (v)[1]/=len; (v)[2]/=len; } }
-#define VectorLength(v) sqrt((v)[0]*(v)[0]+(v)[1]*(v)[1]+(v)[2]*(v)[2])
+#define VectorNormalize(v) { float len = sqrtf((v)[0]*(v)[0]+(v)[1]*(v)[1]+(v)[2]*(v)[2]); if(len) { (v)[0]/=len; (v)[1]/=len; (v)[2]/=len; } }
+#define VectorLength(v) sqrtf((v)[0]*(v)[0]+(v)[1]*(v)[1]+(v)[2]*(v)[2])
 
 #define AngleVectors(angles, forward, right, up) \
 { \
