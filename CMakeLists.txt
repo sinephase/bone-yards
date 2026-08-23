@@ -3,6 +3,8 @@ project(bone-yards C CXX)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(BUILD_GAME_DLL "Build the game DLL" ON)
 option(BUILD_STANDALONE "Build standalone executable" ON)
@@ -26,8 +28,7 @@ if(BUILD_STANDALONE)
     find_package(GLEW QUIET)
     
     if(NOT glfw3_FOUND OR NOT GLEW_FOUND)
-        message(STATUS "GLFW3 or GLEW not found via find_package, trying vcpkg...")
-        # Fallback paths for vcpkg on Windows
+        message(STATUS "GLFW3 or GLEW not found, trying vcpkg...")
         if(PLATFORM_WINDOWS)
             set(VCPKG_ARCH x64-windows)
             if(EXISTS "C:/vcpkg/installed/${VCPKG_ARCH}")
@@ -42,96 +43,122 @@ if(BUILD_STANDALONE)
                 endif()
             endif()
         endif()
-    else()
-        get_target_property(GLFW3_INCLUDE_DIR glfw INTERFACE_INCLUDE_DIRECTORIES)
-        get_target_property(GLEW_INCLUDE_DIR GLEW::GLEW INTERFACE_INCLUDE_DIRECTORIES)
     endif()
 endif()
 
-# Bone Yards Game DLL
-if(BUILD_GAME_DLL)
-    file(GLOB BONE_YARDS_SOURCES
-        "src/bone_yards/by_main.c"
-        "src/bone_yards/by_power.c"
-        "src/bone_yards/by_player.c"
-        "src/bone_yards/by_enemy.c"
-        "src/bone_yards/by_editor.c"
-        "src/bone_yards/by_hazard.c"
-        "src/bone_yards/by_spawn.c"
-        "src/bone_yards/by_input.c"
-        "src/bone_yards/by_movement.c"
-    )
+# Shared library files
+set(QCOMMON_SOURCES
+    src/qcommon/math.c
+    src/qcommon/cvar.c
+    src/qcommon/cmd.c
+    src/qcommon/collision.c
+    src/qcommon/pmove.c
+)
 
-    add_library(game SHARED ${BONE_YARDS_SOURCES})
+set(SERVER_SOURCES
+    src/server/sv_world.c
+    src/server/sv_physics.c
+)
 
-    target_include_directories(game PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-    )
+set(GAME_SOURCES
+    src/game/g_local.c
+    src/game/g_main.c
+    src/game/g_spawn.c
+    src/game/g_physics.c
+    src/game/g_combat.c
+    src/game/g_items.c
+    src/game/g_weapon.c
+    src/game/g_monster.c
+    src/game/g_func.c
+    src/game/g_power.c
+)
 
-    target_link_libraries(game PUBLIC
-        ${OPENGL_LIBRARIES}
-    )
+set(RENDERER_SOURCES
+    src/ref/gl.c
+    src/ref/shaders.c
+    src/ref/models.c
+    src/ref/textures.c
+    src/ref/palette.c
+)
 
-    if(PLATFORM_LINUX OR PLATFORM_FREEBSD)
-        target_compile_options(game PRIVATE -fPIC -fvisibility=hidden)
-        target_link_libraries(game PUBLIC m)
-    elseif(PLATFORM_WINDOWS)
-        target_compile_definitions(game PRIVATE WIN32 _WINDOWS)
-    elseif(PLATFORM_MACOS)
-        target_compile_options(game PRIVATE -fPIC)
-        set_target_properties(game PROPERTIES
-            SUFFIX ".dylib"
-            PREFIX ""
-        )
-    endif()
+set(CLIENT_SOURCES
+    src/client/cl_main.c
+    src/client/cl_input.c
+    src/client/hud.c
+    src/client/menu.c
+    src/client/console.c
+    src/client/keys.c
+    src/client/sound.c
+    src/client/ui.c
+)
 
-    if(BUILD_WITH_EDITOR)
-        target_compile_definitions(game PRIVATE BY_EDITOR_ENABLED=1)
-    endif()
+set(EDITOR_SOURCES
+    src/editor/editor.c
+    src/editor/ed_ui.c
+)
 
-    install(TARGETS game LIBRARY DESTINATION lib)
-endif()
+# Common include directories
+include_directories(src)
+include_directories(${OPENGL_INCLUDE_DIR})
 
-# Standalone Executable
 if(BUILD_STANDALONE)
-    file(GLOB ENGINE_SOURCES
-        "src/bone_yards/by_engine.c"
-        "src/bone_yards/by_render.c"
-        "src/bone_yards/by_main_standalone.c"
+    include_directories(${GLFW3_INCLUDE_DIR})
+    include_directories(${GLEW_INCLUDE_DIR})
+endif()
+
+# Game DLL
+if(BUILD_GAME_DLL)
+    add_library(gamedll SHARED
+        ${QCOMMON_SOURCES}
+        ${SERVER_SOURCES}
+        ${GAME_SOURCES}
     )
+    
+    target_link_libraries(gamedll PRIVATE ${OPENGL_LIBRARIES})
+    
+    if(PLATFORM_WINDOWS)
+        set_target_properties(gamedll PROPERTIES SUFFIX ".dll")
+    elseif(PLATFORM_MACOS)
+        set_target_properties(gamedll PROPERTIES SUFFIX ".dylib")
+    else()
+        set_target_properties(gamedll PROPERTIES SUFFIX ".so")
+    endif()
+endif()
 
-    add_executable(bone-yards ${ENGINE_SOURCES})
-
-    target_include_directories(bone-yards PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${GLFW3_INCLUDE_DIR}
-        ${GLEW_INCLUDE_DIR}
+# Standalone executable
+if(BUILD_STANDALONE)
+    add_executable(bone-yards
+        ${QCOMMON_SOURCES}
+        ${SERVER_SOURCES}
+        ${GAME_SOURCES}
+        ${RENDERER_SOURCES}
+        ${CLIENT_SOURCES}
     )
-
-    if(glfw3_FOUND)
-        target_link_libraries(bone-yards PRIVATE glfw)
-    elseif(GLFW3_LIBRARY)
-        target_link_libraries(bone-yards PRIVATE ${GLFW3_LIBRARY})
+    
+    if(BUILD_WITH_EDITOR)
+        target_sources(bone-yards PRIVATE ${EDITOR_SOURCES})
+        target_compile_definitions(bone-yards PRIVATE BUILD_WITH_EDITOR=1)
     endif()
-
-    if(GLEW_FOUND)
-        target_link_libraries(bone-yards PRIVATE GLEW::GLEW)
-    elseif(GLEW_LIBRARY)
-        target_link_libraries(bone-yards PRIVATE ${GLEW_LIBRARY} opengl32)
-    endif()
-
+    
     target_link_libraries(bone-yards PRIVATE
         ${OPENGL_LIBRARIES}
+        glfw
+        GLEW::GLEW
     )
-
-    if(PLATFORM_LINUX OR PLATFORM_FREEBSD)
-        target_compile_options(bone-yards PRIVATE -fPIC)
+    
+    # Platform-specific link libraries
+    if(PLATFORM_LINUX)
         target_link_libraries(bone-yards PRIVATE m)
     elseif(PLATFORM_WINDOWS)
-        target_compile_definitions(bone-yards PRIVATE WIN32 _WINDOWS)
+        target_link_libraries(bone-yards PRIVATE ws2_32)
     elseif(PLATFORM_MACOS)
-        target_compile_options(bone-yards PRIVATE -fPIC)
+        target_link_libraries(bone-yards PRIVATE "-framework Cocoa" "-framework IOKit")
     endif()
+endif()
 
-    install(TARGETS bone-yards RUNTIME DESTINATION bin)
+# Compiler flags
+if(MSVC)
+    add_compile_options(/W4 /WX)
+else()
+    add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 endif()
