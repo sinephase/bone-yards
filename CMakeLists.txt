@@ -22,8 +22,30 @@ find_package(OpenGL REQUIRED)
 
 # GLFW3 and GLEW for standalone build
 if(BUILD_STANDALONE)
-    find_package(glfw3 REQUIRED)
-    find_package(GLEW REQUIRED)
+    find_package(glfw3 QUIET)
+    find_package(GLEW QUIET)
+    
+    if(NOT glfw3_FOUND OR NOT GLEW_FOUND)
+        message(STATUS "GLFW3 or GLEW not found via find_package, trying vcpkg...")
+        # Fallback paths for vcpkg on Windows
+        if(PLATFORM_WINDOWS)
+            set(VCPKG_ARCH x64-windows)
+            if(EXISTS "C:/vcpkg/installed/${VCPKG_ARCH}")
+                set(VCPKG_INSTALLED_DIR "C:/vcpkg/installed/${VCPKG_ARCH}")
+                if(NOT glfw3_FOUND)
+                    set(GLFW3_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/include")
+                    find_library(GLFW3_LIBRARY glfw3 PATHS "${VCPKG_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
+                endif()
+                if(NOT GLEW_FOUND)
+                    set(GLEW_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/include")
+                    find_library(GLEW_LIBRARY glew32 PATHS "${VCPKG_INSTALLED_DIR}/lib" NO_DEFAULT_PATH)
+                endif()
+            endif()
+        endif()
+    else()
+        get_target_property(GLFW3_INCLUDE_DIR glfw INTERFACE_INCLUDE_DIRECTORIES)
+        get_target_property(GLEW_INCLUDE_DIR GLEW::GLEW INTERFACE_INCLUDE_DIRECTORIES)
+    endif()
 endif()
 
 # Bone Yards Game DLL
@@ -86,10 +108,20 @@ if(BUILD_STANDALONE)
         ${GLEW_INCLUDE_DIR}
     )
 
+    if(glfw3_FOUND)
+        target_link_libraries(bone-yards PRIVATE glfw)
+    elseif(GLFW3_LIBRARY)
+        target_link_libraries(bone-yards PRIVATE ${GLFW3_LIBRARY})
+    endif()
+
+    if(GLEW_FOUND)
+        target_link_libraries(bone-yards PRIVATE GLEW::GLEW)
+    elseif(GLEW_LIBRARY)
+        target_link_libraries(bone-yards PRIVATE ${GLEW_LIBRARY} opengl32)
+    endif()
+
     target_link_libraries(bone-yards PRIVATE
         ${OPENGL_LIBRARIES}
-        glfw
-        GLEW::GLEW
         m
     )
 
