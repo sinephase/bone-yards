@@ -70,11 +70,11 @@ if(BUILD_GAME_DLL)
 
     target_link_libraries(game PUBLIC
         ${OPENGL_LIBRARIES}
-        m
     )
 
     if(PLATFORM_LINUX OR PLATFORM_FREEBSD)
         target_compile_options(game PRIVATE -fPIC -fvisibility=hidden)
+        target_link_libraries(game PUBLIC m)
     elseif(PLATFORM_WINDOWS)
         target_compile_definitions(game PRIVATE WIN32 _WINDOWS)
     elseif(PLATFORM_MACOS)
@@ -122,11 +122,11 @@ if(BUILD_STANDALONE)
 
     target_link_libraries(bone-yards PRIVATE
         ${OPENGL_LIBRARIES}
-        m
     )
 
     if(PLATFORM_LINUX OR PLATFORM_FREEBSD)
         target_compile_options(bone-yards PRIVATE -fPIC)
+        target_link_libraries(bone-yards PRIVATE m)
     elseif(PLATFORM_WINDOWS)
         target_compile_definitions(bone-yards PRIVATE WIN32 _WINDOWS)
     elseif(PLATFORM_MACOS)
