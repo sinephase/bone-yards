@@ -9,12 +9,9 @@
  */
 
 #include "by_engine.h"
-#include "by_local.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <GL/glew.h>
-#include <GL/glfw3.h>
 
 /* Game state */
 static struct {

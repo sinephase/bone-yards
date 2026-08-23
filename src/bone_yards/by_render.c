@@ -9,7 +9,6 @@
  */
 
 #include "by_engine.h"
-#include <GL/glew.h>
 #include <stdio.h>
 
 /* Simple vertex for debug geometry */

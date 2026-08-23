@@ -9,8 +9,6 @@
  */
 
 #include "by_engine.h"
-#include <GL/glfw3.h>
-#include <GL/glew.h>
 
 engine_context_t engine = {0};
 static qboolean engine_running = false;
