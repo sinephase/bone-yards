@@ -11,7 +11,7 @@
 #ifndef BY_ENGINE_H
 #define BY_ENGINE_H
 
-#include <GL/glfw3.h>
+#include <GLFW/glfw3.h>
 #include <GL/glew.h>
 #include <math.h>
 #include <stdio.h>
