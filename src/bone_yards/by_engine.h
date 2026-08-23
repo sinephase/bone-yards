@@ -11,6 +11,7 @@
 #ifndef BY_ENGINE_H
 #define BY_ENGINE_H
 
+#include "../game/game.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <math.h>
@@ -30,18 +31,6 @@ typedef struct {
 	float near_plane;
 	float far_plane;
 } engine_context_t;
-
-typedef struct {
-	float x, y, z;
-} vec3_t;
-
-typedef struct {
-	float x, y, z, w;
-} quat_t;
-
-typedef struct {
-	float m[16];
-} mat4_t;
 
 /* ====================================================================== */
 /* FUNCTION DECLARATIONS */
