@@ -2,11 +2,18 @@
 // Initializes SDL2, OpenGL, and runs the main game loop
 
 #include "qcommon.h"
-#include "renderer/gl_main.h"
-#include "input/in_input.h"
+
+// Windows headers must come before GL headers
+#ifdef _WIN32
+    #include <windows.h>
+#endif
+
 #include <SDL2/SDL.h>
 #include <GL/gl.h>
 #include <glm/glm.hpp>
+
+#include "renderer/gl_main.h"
+#include "input/in_input.h"
 
 namespace {
     SDL_Window* window = nullptr;
