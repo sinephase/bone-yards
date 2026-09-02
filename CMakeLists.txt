@@ -44,6 +44,7 @@ if(MSVC)
     target_compile_options(bone-yards PRIVATE /W4 /wd4100)
     set_target_properties(bone-yards PROPERTIES
         VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        LINK_FLAGS "/SUBSYSTEM:CONSOLE"
     )
 else()
     target_compile_options(bone-yards PRIVATE -Wall -Wextra -Wno-unused-parameter)
