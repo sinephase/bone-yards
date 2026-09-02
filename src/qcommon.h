@@ -20,10 +20,7 @@
 typedef uint8_t byte;
 typedef uint16_t word;
 typedef uint32_t dword;
-typedef int32_t qboolean;
-
-#define true 1
-#define false 0
+typedef int qboolean;
 
 // Entity structure
 struct edict_t {
