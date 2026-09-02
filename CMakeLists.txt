@@ -19,7 +19,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-# Source files
+# Source files - explicitly list all source files
 set(ENGINE_SOURCES
     src/qcommon.cpp
     src/main.cpp
@@ -42,15 +42,16 @@ target_link_libraries(bone-yards PRIVATE
 # Platform-specific settings
 if(MSVC)
     target_compile_options(bone-yards PRIVATE /W4 /wd4100)
+    target_link_options(bone-yards PRIVATE /SUBSYSTEM:CONSOLE)
     set_target_properties(bone-yards PROPERTIES
         VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        LINK_FLAGS "/SUBSYSTEM:CONSOLE"
     )
 else()
     target_compile_options(bone-yards PRIVATE -Wall -Wextra -Wno-unused-parameter)
 endif()
 
 message(STATUS "bone-yards C++ OpenGL build configured")
+message(STATUS "Source files: ${ENGINE_SOURCES}")
 message(STATUS "SDL2 found: ${SDL2_FOUND}")
 message(STATUS "GLM found: ${glm_FOUND}")
 message(STATUS "Output: ${CMAKE_CURRENT_BINARY_DIR}/bone-yards.exe")
