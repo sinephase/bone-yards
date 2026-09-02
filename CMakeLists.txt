@@ -30,7 +30,7 @@ set(ENGINE_SOURCES
 )
 
 # Create executable
-add_executable(bone-yards ${ENGINE_SOURCES})
+add_executable(bone-yards WIN32 ${ENGINE_SOURCES})
 
 # Link libraries
 target_link_libraries(bone-yards PRIVATE
