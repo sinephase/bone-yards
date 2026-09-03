@@ -6,6 +6,7 @@
 #include "game.h"
 #include <algorithm>
 #include <cmath>
+#include <glm/glm.hpp>
 
 namespace game {
 

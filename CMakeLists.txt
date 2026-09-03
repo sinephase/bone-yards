@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(bone-yards-cpp VERSION 1.0.0 LANGUAGES CXX C)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Use vcpkg toolchain
@@ -27,6 +27,19 @@ set(ENGINE_SOURCES
     src/renderer/gl_model.cpp
     src/renderer/gl_light.cpp
     src/input/in_input.cpp
+    src/qcommon/cmd.cpp
+    src/qcommon/cvar.cpp
+    src/qcommon/math.cpp
+    src/qcommon/pmove.cpp
+    src/qcommon/cmodel.cpp
+    src/server/sv_world.cpp
+    src/game/g_main.cpp
+    src/game/g_combat.cpp
+    src/game/g_spawn.cpp
+    src/game/g_weapon.cpp
+    src/editor/editor.cpp
+    src/client/cl_main.cpp
+    src/ref/gl.cpp
 )
 
 # Create executable

@@ -4,6 +4,28 @@
 
 namespace qcommon {
 
+constexpr float DEG_TO_RAD = 3.14159265359f / 180.0f;
+constexpr float RAD_TO_DEG = 180.0f / 3.14159265359f;
+
+struct vec3 {
+    float x = 0.0f, y = 0.0f, z = 0.0f;
+};
+
+struct mat3 {
+    float m[3][3] = {};
+
+    static mat3 identity();
+    static mat3 translation(const vec3& t);
+    static mat3 rotationZ(float radians);
+    static mat3 scale(const vec3& s);
+};
+
+struct angleVectors_t {
+    vec3 forward;
+    vec3 right;
+    vec3 up;
+};
+
 // ============================================================================
 // Vector operations
 // ============================================================================
@@ -73,37 +95,37 @@ vec3 clamp(const vec3& v, float min_val, float max_val) {
 // ============================================================================
 
 mat3 mat3::identity() {
-    return {
+    return {{
         {1, 0, 0},
         {0, 1, 0},
         {0, 0, 1}
-    };
+    }};
 }
 
 mat3 mat3::translation(const vec3& t) {
-    return {
+    return {{
         {1, 0, t.x},
         {0, 1, t.y},
         {0, 0, 1}
-    };
+    }};
 }
 
 mat3 mat3::rotationZ(float radians) {
     float c = std::cos(radians);
     float s = std::sin(radians);
-    return {
+    return {{
         {c, -s, 0},
         {s, c, 0},
         {0, 0, 1}
-    };
+    }};
 }
 
 mat3 mat3::scale(const vec3& s) {
-    return {
+    return {{
         {s.x, 0, 0},
         {0, s.y, 0},
         {0, 0, s.z}
-    };
+    }};
 }
 
 mat3 operator*(const mat3& a, const mat3& b) {
@@ -146,7 +168,7 @@ vec3 angleVectors(const vec3& angles) {
     };
 }
 
-angleVectors_t angleVectors(const vec3& angles) {
+angleVectors_t angleVectorsFull(const vec3& angles) {
     float pitch = angles.x * DEG_TO_RAD;
     float yaw = angles.y * DEG_TO_RAD;
     float roll = angles.z * DEG_TO_RAD;
@@ -219,3 +241,34 @@ vec3 boxSize(const vec3& mins, const vec3& maxs) {
 }
 
 } // namespace qcommon
+
+// ============================================================================
+// Global vec3_t-based API declared in math.h (used by qcommon/pmove.cpp)
+// ============================================================================
+
+void AngleVectors(const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up) {
+    float pitch = DEG2RAD(angles[0]);
+    float yaw = DEG2RAD(angles[1]);
+    float roll = DEG2RAD(angles[2]);
+
+    float sp = sinf(pitch), cp = cosf(pitch);
+    float sy = sinf(yaw), cy = cosf(yaw);
+    float sr = sinf(roll), cr = cosf(roll);
+
+    if (forward) {
+        forward[0] = cp * cy;
+        forward[1] = cp * sy;
+        forward[2] = -sp;
+    }
+    if (right) {
+        right[0] = -sr * sp * cy + -cr * -sy;
+        right[1] = -sr * sp * sy + -cr * cy;
+        right[2] = -sr * cp;
+    }
+    if (up) {
+        up[0] = cr * sp * cy + -sr * -sy;
+        up[1] = cr * sp * sy + -sr * cy;
+        up[2] = cr * cp;
+    }
+}
+

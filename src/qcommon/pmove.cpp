@@ -3,12 +3,13 @@
 // Port of qcommon/pmove.c
 
 #include "qcommon.h"
+#include "pmove.h"
 #include <cmath>
 #include <algorithm>
+#include <glm/glm.hpp>
 
 namespace engine {
 
-#define STEPSIZE 18.0f
 #define WATERLEVEL_FEET 1
 #define WATERLEVEL_WAIST 2
 #define WATERLEVEL_HEAD 3
@@ -32,7 +33,7 @@ pm_tunables_t pm_tunable = {
 };
 
 static void PM_Friction(pmove_state_t* ps, float frametime) {
-    const float* vel = ps->velocity;
+    glm::vec3 vel = ps->velocity;
     float speed = sqrtf(vel[0] * vel[0] + vel[1] * vel[1]);
     
     if (speed < 1.0f) {
@@ -59,7 +60,7 @@ static void PM_Friction(pmove_state_t* ps, float frametime) {
 }
 
 static void PM_Accelerate(pmove_state_t* ps, const vec3_t wishdir, float wishspeed, float frametime) {
-    const float* vel = ps->velocity;
+    glm::vec3 vel = ps->velocity;
     float currentspeed = vel[0] * wishdir[0] + vel[1] * wishdir[1] + vel[2] * wishdir[2];
     float addspeed = wishspeed - currentspeed;
     

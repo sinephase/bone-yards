@@ -6,19 +6,13 @@
 #include "game.h"
 #include <algorithm>
 #include <cmath>
+#include <glm/glm.hpp>
 
 namespace game {
 
 extern edict_t* g_edicts;
 extern int g_num_edicts;
-
-// Damage type flags
-#define DAMAGE_NONE         0
-#define DAMAGE_NORMAL       1
-#define DAMAGE_ENERGY       2
-#define DAMAGE_EXPLOSION    4
-#define DAMAGE_FIRE         8
-#define DAMAGE_ACID         16
+extern gamestate_t g_gamestate;
 
 // Apply damage to an entity
 void G_Damage(edict_t* victim, edict_t* attacker, edict_t* inflictor, 

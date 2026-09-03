@@ -1,9 +1,13 @@
 #pragma once
 
 #include "math.h"
-#include "collision.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include <glm/glm.hpp>
+
+struct edict_t;
+
+namespace engine {
 
 /* Player movement constants */
 #define PM_NORMAL     0
@@ -11,36 +15,46 @@
 #define PM_SPECTATOR  2
 #define PM_FREEZE     3
 
-#define PMF_ON_GROUND 0x0001
-#define PMF_JUMP      0x0002
-#define PMF_CROUCH    0x0004
-#define PMF_SPRINT    0x0008
-
 #define STEPSIZE      18.0f
 #define MAXMOVE       16.0f
 
-typedef struct {
-    vec3_t origin;
-    vec3_t velocity;
-    uint32_t pm_type;
-    uint32_t pm_flags;
-    float pm_time;
-    float stamina;
-    bool exhausted;
-} pstate_t;
+/* Movement input buttons */
+#define BUTTON_JUMP   0x0001
+#define BUTTON_SPRINT 0x0002
 
-typedef struct {
-    pstate_t *state;
-    vec3_t origin;
-    vec3_t velocity;
-    vec3_t mins, maxs;
-    vec3_t forward, right, up;
-    
+/* Per-frame tunable movement parameters */
+struct pm_tunables_t {
+    float max_speed;
+    float sprint_speed;
+    float jump_velocity;
+    float gravity;
+    float step_size;
+    float friction;
+};
+
+extern pm_tunables_t pm_tunable;
+
+/* Player input command for a single simulation frame */
+struct usercmd_t {
+    int forwardmove;
+    int sidemove;
+    int upmove;
     uint32_t buttons;
-    float msec;
-    
-    trace_t (*trace_fn)(const vec3_t, const vec3_t, const vec3_t, const vec3_t, uint32_t);
-    uint32_t (*contents_fn)(const vec3_t);
-} pmove_t;
+};
 
-void Pmove(pmove_t *pm);
+/* Player movement state, updated in place by PM_Move() */
+struct pmove_state_t {
+    glm::vec3 origin;
+    glm::vec3 velocity;
+    vec3_t viewangles;
+    int waterlevel;
+    bool onground;
+    float stamina;
+    edict_t *groundentity;
+    usercmd_t cmd;
+    float frametime;
+};
+
+void PM_Move(pmove_state_t *ps, const usercmd_t *cmd, float frametime);
+
+}  // namespace engine

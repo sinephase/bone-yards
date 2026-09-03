@@ -3,9 +3,11 @@
 // The core of both movement prediction and raycasting for the editor and renderer.
 
 #include "qcommon.h"
+#include "collision.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <glm/glm.hpp>
 
 namespace engine {
 

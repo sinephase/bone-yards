@@ -3,8 +3,10 @@
 // and performs collision traces against the entity and brush geometry.
 
 #include "qcommon.h"
+#include "sv_world.h"
 #include <algorithm>
 #include <cmath>
+#include <unordered_set>
 
 namespace engine {
 
@@ -12,7 +14,7 @@ namespace engine {
 // Divides the world into a coarse grid of cells
 static constexpr int WORLD_GRID_SIZE = 128;  // Units per grid cell
 static constexpr int WORLD_GRID_CELLS = 512;  // 512x512 cells = 65536x65536 units
-static std::vector<std::vector<edict_t*>> world_grid[WORLD_GRID_CELLS][WORLD_GRID_CELLS];
+static std::vector<edict_t*> world_grid[WORLD_GRID_CELLS][WORLD_GRID_CELLS];
 
 static int CM_GridFromX(float x) {
     int grid = (int)(x / WORLD_GRID_SIZE);
