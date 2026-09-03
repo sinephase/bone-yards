@@ -42,7 +42,8 @@ target_link_libraries(bone-yards PRIVATE
 # Platform-specific settings
 if(MSVC)
     target_compile_options(bone-yards PRIVATE /W4 /wd4100)
-    target_link_options(bone-yards PRIVATE /SUBSYSTEM:CONSOLE)
+    # Use /ENTRY:mainCRTStartup for console application with standard main() entry
+    target_link_options(bone-yards PRIVATE /SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup)
     set_target_properties(bone-yards PROPERTIES
         VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     )
