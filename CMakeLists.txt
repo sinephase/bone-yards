@@ -43,9 +43,6 @@ target_link_libraries(bone-yards PRIVATE
 if(MSVC)
     target_compile_options(bone-yards PRIVATE /W4 /wd4100)
     
-    # Link C runtime library explicitly
-    target_link_libraries(bone-yards PRIVATE libcmt.lib)
-    
     # Console subsystem
     target_link_options(bone-yards PRIVATE /SUBSYSTEM:CONSOLE)
     
