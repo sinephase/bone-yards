@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <time.h>
+#include <chrono>
 
 // Simple console output
 void Com_Printf(const char* fmt, ...) {
@@ -50,15 +50,12 @@ void Com_Warning(const char* fmt, ...) {
     fflush(stderr);
 }
 
-// Get current time in milliseconds
+// Get current time in milliseconds using std::chrono
 unsigned int Com_Milliseconds() {
-    static unsigned int base_time = 0;
-    
-    if (base_time == 0) {
-        base_time = (unsigned int)time(nullptr) * 1000;
-    }
-    
-    return (unsigned int)time(nullptr) * 1000 - base_time;
+    static auto start_time = std::chrono::high_resolution_clock::now();
+    auto now = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time);
+    return static_cast<unsigned int>(elapsed.count());
 }
 
 // Initialize common systems
