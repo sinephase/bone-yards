@@ -32,7 +32,7 @@ set(ENGINE_SOURCES
 # Create executable
 add_executable(bone-yards ${ENGINE_SOURCES})
 
-# Link libraries - SDL2::SDL2 must come before other system libs
+# Link libraries
 target_link_libraries(bone-yards PRIVATE
     SDL2::SDL2
     OpenGL::GL
@@ -43,18 +43,14 @@ target_link_libraries(bone-yards PRIVATE
 if(MSVC)
     target_compile_options(bone-yards PRIVATE /W4 /wd4100)
     
-    # Force C++ runtime and console subsystem
-    target_link_options(bone-yards PRIVATE 
-        /SUBSYSTEM:CONSOLE 
-        /ENTRY:wmain
-    )
+    # Link C runtime library explicitly
+    target_link_libraries(bone-yards PRIVATE libcmt.lib)
     
-    # Explicitly link C++ runtime
-    string(REPLACE "/ENTRY:mainCRTStartup" "" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+    # Console subsystem
+    target_link_options(bone-yards PRIVATE /SUBSYSTEM:CONSOLE)
     
     set_target_properties(bone-yards PROPERTIES
         VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        LINK_FLAGS "/SUBSYSTEM:CONSOLE /ENTRY:wmain"
     )
 else()
     target_compile_options(bone-yards PRIVATE -Wall -Wextra -Wno-unused-parameter)
