@@ -142,8 +142,8 @@ void Main_Shutdown() {
     Com_Printf("Goodbye!\n");
 }
 
-// Entry point
-int main(int argc, char* argv[]) {
+// Entry point - using wmain for Windows with proper C++ linkage
+int wmain(int argc, wchar_t* argv[]) {
     Com_Init();
 
     if (!Main_Init()) {
