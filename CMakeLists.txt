@@ -42,10 +42,19 @@ target_link_libraries(bone-yards PRIVATE
 # Platform-specific settings
 if(MSVC)
     target_compile_options(bone-yards PRIVATE /W4 /wd4100)
-    # For MSVC: use /SUBSYSTEM:CONSOLE
-    target_link_options(bone-yards PRIVATE /SUBSYSTEM:CONSOLE)
+    
+    # Force C++ runtime and console subsystem
+    target_link_options(bone-yards PRIVATE 
+        /SUBSYSTEM:CONSOLE 
+        /ENTRY:wmain
+    )
+    
+    # Explicitly link C++ runtime
+    string(REPLACE "/ENTRY:mainCRTStartup" "" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+    
     set_target_properties(bone-yards PROPERTIES
         VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        LINK_FLAGS "/SUBSYSTEM:CONSOLE /ENTRY:wmain"
     )
 else()
     target_compile_options(bone-yards PRIVATE -Wall -Wextra -Wno-unused-parameter)
