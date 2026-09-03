@@ -32,10 +32,10 @@ set(ENGINE_SOURCES
 # Create executable
 add_executable(bone-yards ${ENGINE_SOURCES})
 
-# Link libraries
+# Link libraries - SDL2::SDL2 must come before other system libs
 target_link_libraries(bone-yards PRIVATE
-    OpenGL::GL
     SDL2::SDL2
+    OpenGL::GL
     glm::glm
 )
 
