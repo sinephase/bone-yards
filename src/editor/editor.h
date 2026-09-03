@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../server/sv_world.h"
+#include "../qcommon/math.h"
 #include <stdint.h>
 #include <stdbool.h>
 

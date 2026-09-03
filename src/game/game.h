@@ -17,26 +17,23 @@
 #include <math.h>
 #include <time.h>
 #include <stdarg.h>
+#include <string>
+#include <vector>
+#include <unordered_map>
+#include <glm/glm.hpp>
+
+#include "../qcommon.h"
+#include "../qcommon/pmove.h"
+#include "../server/sv_world.h"
+
+// Bring the shared engine types (edict_t is global already; trace_t, brush_t,
+// usercmd_t, pmove_state_t, PM_Move, SV_*, CM_* helpers) into scope so the
+// game module code can use them unqualified, matching how it is written.
+using namespace engine;
 
 /* ====================================================================== */
 /* BASIC TYPES */
 /* ====================================================================== */
-
-typedef int qboolean;
-#define true 1
-#define false 0
-
-typedef struct {
-	float x, y, z;
-} vec3_t;
-
-typedef struct {
-	int x, y, z;
-} ivec3_t;
-
-typedef struct {
-	float m[16];
-} mat4_t;
 
 /* ====================================================================== */
 /* ENTITY SYSTEM */
@@ -51,97 +48,24 @@ typedef struct {
 #define SVF_MONSTER 2
 #define SVF_CORPSE 4
 
-#define SOLID_NOT 0
-#define SOLID_TRIGGER 1
-#define SOLID_BBOX 2
-#define SOLID_BSP 3
+/* Movement types */
+#define MOVETYPE_NONE   0
+#define MOVETYPE_NOCLIP 1
+#define MOVETYPE_PUSH   2
+#define MOVETYPE_STOP   3
+#define MOVETYPE_WALK   4
+#define MOVETYPE_STEP   5
+#define MOVETYPE_FLY    6
+#define MOVETYPE_TOSS   7
+#define MOVETYPE_BOUNCE 8
 
-/* Forward declarations */
-typedef struct edict_s edict_t;
-typedef struct gclient_s gclient_t;
-
-typedef struct {
-	int usernum;
-	unsigned int buttons;
-	unsigned int oldbuttons;
-	short forwardmove;
-	short rightmove;
-	short upmove;
-	short angles[3];
-} usercmd_t;
-
-typedef struct gclient_s {
-	int ping;
-} gclient_t;
-
-typedef struct edict_s {
-	int s_number;
-	int inuse;
-	int svflags;
-	int flags;
-	int solid;
-	int movetype;
-	int classname_index;
-	const char *classname;
-	float freetime;
-	vec3_t s_origin;
-	vec3_t s_angles;
-	vec3_t s_old_origin;
-	vec3_t velocity;
-	vec3_t avelocity;
-	vec3_t mins;
-	vec3_t maxs;
-	vec3_t absmin;
-	vec3_t absmax;
-	vec3_t size;
-	struct edict_s *groundentity;
-	int health;
-	int max_health;
-	int gib_health;
-	int mass;
-	int contents;
-	int movetype_flags;
-	int nextthink;
-	float ltime;
-	float lastactivetime;
-	int index;
-	gclient_t *client;
-	void *priv;
-} edict_t;
-
-/* ====================================================================== */
-/* GAME STATE */
-/* ====================================================================== */
-
-typedef struct {
-	int serverframe;
-	int leveltime;
-	char levelname[64];
-	char mapname[64];
-	int framenum;
-	float time;
-	edict_t *current_entity;
-} level_locals_t;
-
-typedef struct {
-	int dummy;
-} game_locals_t;
-
-typedef struct {
-	int dummy;
-} spawn_temp_t;
-
-/* ====================================================================== */
-/* BUTTONS */
-/* ====================================================================== */
-
-#define BUTTON_ATTACK 1
-#define BUTTON_ATTACK2 2
-#define BUTTON_JUMP 4
-#define BUTTON_1 8
-#define BUTTON_2 16
-#define BUTTON_3 32
-#define BUTTON_4 64
+/* Damage flags */
+#define DAMAGE_NONE         0
+#define DAMAGE_NORMAL       1
+#define DAMAGE_ENERGY       2
+#define DAMAGE_EXPLOSION    4
+#define DAMAGE_FIRE         8
+#define DAMAGE_ACID         16
 
 /* ====================================================================== */
 /* GLFW KEY CODES (for input.h compatibility) */
@@ -204,44 +128,61 @@ typedef struct {
 #define TAG_LEVEL 766
 
 /* ====================================================================== */
-/* HELPER MACROS */
+/* GAME MODULE STATE */
 /* ====================================================================== */
 
-#define M_PI 3.14159265359f
+namespace game {
 
-/* Vector operations */
-#define VectorClear(a) ((a)[0]=(a)[1]=(a)[2]=0)
-#define VectorSet(v,x,y,z) ((v)[0]=(x), (v)[1]=(y), (v)[2]=(z))
-#define VectorCopy(a,b) ((b)[0]=(a)[0], (b)[1]=(a)[1], (b)[2]=(a)[2])
-#define DotProduct(x,y) ((x)[0]*(y)[0]+(x)[1]*(y)[1]+(x)[2]*(y)[2])
-#define VectorSubtract(a,b,c) ((c)[0]=(a)[0]-(b)[0], (c)[1]=(a)[1]-(b)[1], (c)[2]=(a)[2]-(b)[2])
-#define VectorAdd(a,b,c) ((c)[0]=(a)[0]+(b)[0], (c)[1]=(a)[1]+(b)[1], (c)[2]=(a)[2]+(b)[2])
-#define VectorScale(v,s,o) ((o)[0]=(v)[0]*(s), (o)[1]=(v)[1]*(s), (o)[2]=(v)[2]*(s))
-#define VectorMA(v,s,b,o) ((o)[0]=(v)[0]+(b)[0]*(s), (o)[1]=(v)[1]+(b)[1]*(s), (o)[2]=(v)[2]+(b)[2]*(s))
-#define VectorNormalize(v) { float len = sqrtf((v)[0]*(v)[0]+(v)[1]*(v)[1]+(v)[2]*(v)[2]); if(len) { (v)[0]/=len; (v)[1]/=len; (v)[2]/=len; } }
-#define VectorLength(v) sqrtf((v)[0]*(v)[0]+(v)[1]*(v)[1]+(v)[2]*(v)[2])
+struct gamestate_t {
+    int levelnum;
+    float time;
+    int framenum;
+};
 
-#define AngleVectors(angles, forward, right, up) \
-{ \
-	float pitch = (angles)[0] * M_PI / 180.0f; \
-	float yaw = (angles)[1] * M_PI / 180.0f; \
-	float sp = sinf(pitch), cp = cosf(pitch); \
-	float sy = sinf(yaw), cy = cosf(yaw); \
-	if(forward) { (forward)[0] = cp*cy; (forward)[1] = cp*sy; (forward)[2] = -sp; } \
-	if(right) { (right)[0] = -sy; (right)[1] = cy; (right)[2] = 0; } \
-	if(up) { (up)[0] = sp*cy; (up)[1] = sp*sy; (up)[2] = cp; } \
-}
+/* g_main.cpp */
+void G_InitGame(int levelnum, const char *mapname);
+void G_ShutdownGame();
+edict_t *G_Spawn();
+void G_FreeEntity(edict_t *ent);
+void G_RunFrame();
+void G_ClientConnect(int clientnum);
+void G_ClientDisconnect(int clientnum);
+void G_ClientThink(int clientnum, usercmd_t *cmd);
+void G_GetGameState(gamestate_t *state);
 
-/* String comparison */
-#define Q_stricmp(s1, s2) strcasecmp(s1, s2)
-#define Q_strlcpy(d, s, n) strncpy(d, s, n-1); d[n-1]=0
+/* g_combat.cpp */
+void G_Damage(edict_t *victim, edict_t *attacker, edict_t *inflictor,
+              const glm::vec3& dir, const glm::vec3& point, int damage, int dflags);
+void G_Die(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, int meansOfDeath);
+void G_Gib(edict_t *self, edict_t *attacker);
+void G_Fire(edict_t *ent, const glm::vec3& start, const glm::vec3& dir,
+            int damage, float speed, int lifetime);
+trace_t G_FireRay(edict_t *ent, const glm::vec3& start, const glm::vec3& dir,
+                   int damage, int range);
+bool G_CanSee(edict_t *ent, edict_t *target);
+float G_Distance(edict_t *ent, edict_t *target);
+edict_t *G_FindNearestEnemy(edict_t *ent, float range);
+void G_Heal(edict_t *ent, int amount);
+void G_GiveArmor(edict_t *ent, int amount);
+void G_GiveAmmo(edict_t *ent, int weapon_id, int ammo_count);
+void G_RadiusDamage(edict_t *inflictor, edict_t *attacker, int damage,
+                     float radius, edict_t *ignore, int dflags);
 
-/* Random */
-#define random() (rand() / (float)RAND_MAX)
+/* g_spawn.cpp */
+edict_t *ED_Spawn(const std::unordered_map<std::string, std::string>& kvpairs);
+void G_SpawnEntities(const char *mapname);
 
-/* Allocation wrappers */
-#define G_Alloc(size) malloc(size)
-#define G_Spawn() calloc(1, sizeof(edict_t))
-#define G_FreeEdict(e) free(e)
+/* g_weapon.cpp */
+void W_GiveWeapon(edict_t *player, int weapon_id);
+void W_GiveAmmo(edict_t *player, int ammo_type, int amount);
+void W_SelectWeapon(edict_t *player, int weapon_id);
+bool W_CanFire(edict_t *player);
+void W_Fire(edict_t *player, const glm::vec3& dir);
+void W_Reload(edict_t *player);
+void SP_projectile_think(edict_t *ent);
+void W_GetInventory(edict_t *player, int *weapons, int *ammo);
+void W_DropWeapon(edict_t *player);
+
+}  // namespace game
 
 #endif /* GAME_H */

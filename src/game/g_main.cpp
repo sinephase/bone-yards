@@ -7,11 +7,12 @@
 #include <vector>
 #include <algorithm>
 #include <cstring>
+#include <glm/glm.hpp>
 
 namespace game {
 
 // Global game state
-static gamestate_t g_gamestate;
+gamestate_t g_gamestate;
 static std::vector<edict_t> g_entities;
 static constexpr int MAX_ENTITIES = 1024;
 static constexpr float FRAMETIME = 1.0f / 60.0f;  // 60 Hz server tick
@@ -53,7 +54,7 @@ edict_t* G_Spawn() {
     }
 
     edict_t* ent = &g_edicts[g_num_edicts++];
-    std::memset(ent, 0, sizeof(*ent));
+    *ent = edict_t{};
     ent->s.number = g_num_edicts - 1;
     ent->inuse = true;
 

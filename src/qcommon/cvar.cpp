@@ -3,8 +3,11 @@
 // and archived to config files. They drive gameplay tuning, graphics settings, and UI state.
 
 #include "qcommon.h"
+#include "cvar.h"
 #include <unordered_map>
 #include <algorithm>
+#include <string>
+#include <sstream>
 
 namespace engine {
 

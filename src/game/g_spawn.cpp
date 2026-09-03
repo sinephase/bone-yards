@@ -7,6 +7,9 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <unordered_map>
+#include <glm/glm.hpp>
+#include <cstdio>
 
 namespace game {
 

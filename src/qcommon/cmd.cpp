@@ -3,17 +3,15 @@
 // The buffer accumulates input and executes commands in order each frame.
 
 #include "qcommon.h"
+#include "cmd.h"
 #include <sstream>
 #include <algorithm>
 #include <iostream>
+#include <unordered_map>
+#include <vector>
+#include <string>
 
 namespace engine {
-
-struct cmd_function_t {
-    std::string name;
-    cmd_callback_t callback;
-    std::string description;
-};
 
 static std::vector<std::string> cmd_buffer;
 static std::unordered_map<std::string, cmd_function_t> cmd_functions;
