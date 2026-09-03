@@ -142,8 +142,8 @@ void Main_Shutdown() {
     Com_Printf("Goodbye!\n");
 }
 
-// Entry point - Explicitly decorated for MSVC linking
-extern "C" int main(int argc, char* argv[]) {
+// Entry point
+int main(int argc, char* argv[]) {
     Com_Init();
 
     if (!Main_Init()) {
